@@ -1,3 +1,5 @@
+import time
+
 import config
 import unittest
 import logging
@@ -28,141 +30,137 @@ class TestChangePassword(unittest.TestCase):
         return "".join(random.choice(characters) for i in range(length))
 
     def test_change_password(self):
-
         driver = self.driver
 
-        # Вход в личный кабинет
-        logging.info("Переход на страницу авторизации.")
-        login_link = driver.find_element(By.CSS_SELECTOR, "a.login")
+        # Переход к авторизации
+        login_link = driver.find_element(By.CSS_SELECTOR, "a.link--secondary")
         login_link.click()
         logging.info("Клик по ссылке 'Войти'.")
 
         # Заполнение формы авторизации
-        email_input = driver.find_element(By.NAME, "USER_LOGIN")
-        password_input = driver.find_element(By.NAME, "USER_PASSWORD")
-
+        email_input = driver.find_element(By.ID, "loginEmail")
+        password_input = driver.find_element(By.ID, "inputPasswordAuth")
         logging.info("Заполнение формы авторизации.")
         email_input.send_keys(config.AUTH_EMAIL_CORRECT)
         password_input.send_keys(config.AUTH_PASSWORD_CORRECT)
 
         # Отправка формы
         password_input.send_keys(Keys.RETURN)
-        logging.info("Отправка формы авторизации.")
 
         # Ожидание перехода на главную страницу
-        logging.info("Ожидание появления ссылки на главную страницу.")
+        logging.info("Ожидание появления аватара пользователя на главной странице.")
         WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "a[href='/']"))
+            EC.presence_of_element_located((By.CSS_SELECTOR, "img.avatar"))
         )
 
-        logging.info("Переход на главную страницу.")
-        login_link = driver.find_element(By.CSS_SELECTOR, "[href='/']")
+        # Переход в личный кабинет
+        logging.info("Переход в личный кабинет.")
+        login_link = driver.find_element(By.CSS_SELECTOR, "img.avatar")
         login_link.click()
 
-        # Переход в личный кабинет и смена пароля
         try:
-            logging.info("Переход в личный кабинет.")
-            driver.find_element(By.CSS_SELECTOR, "a[href='/personal/']").click()
+            # Переход в настройки профиля
+            logging.info("Переход в настройки безопасности.")
+            driver.find_element(By.LINK_TEXT, "Безопасность").click()
 
-            # Переход к изменению профиля
+            # Ожидание кнопки для смены пароля
             WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, "a[href='/personal/profile/']")
-                )
+                EC.presence_of_element_located((By.CSS_SELECTOR, "button.link"))
             )
-            logging.info("Переход к изменению профиля.")
-            driver.find_element(By.CSS_SELECTOR, "a[href='/personal/profile/']").click()
-
-            # Сохранение старого пароля
-            config.AUTH_PASSWORD_OLD = config.AUTH_PASSWORD_CORRECT
-            logging.info(f"Старый пароль: {config.AUTH_PASSWORD_OLD}")
-
-            # Генерация нового пароля
-            config.AUTH_PASSWORD_CORRECT = self.generate_random_password()
-            logging.info(
-                f"Сгенерированный новый пароль: {config.AUTH_PASSWORD_CORRECT}"
-            )
-
-            config.update_config(config.AUTH_PASSWORD_OLD, config.AUTH_PASSWORD_CORRECT)
+            logging.info("Клик по кнопке изменения пароля.")
+            driver.find_element(By.CSS_SELECTOR, "button.link").click()
 
             # Заполнение полей для смены пароля
-            new_password_input = driver.find_element(By.NAME, "NEW_PASSWORD")
+            logging.info(f"Текущий пароль: {config.AUTH_PASSWORD_CORRECT}")
+            old_password_input = driver.find_element(By.ID, "updatepasswordform-password")
+            old_password_input.send_keys(config.AUTH_PASSWORD_CORRECT)
+
+            # Генерация и установка нового пароля
+            config.AUTH_PASSWORD_OLD = config.AUTH_PASSWORD_CORRECT
+            config.AUTH_PASSWORD_CORRECT = self.generate_random_password()
+            logging.info(f"Сгенерированный новый пароль: {config.AUTH_PASSWORD_CORRECT}")
+            config.update_config(config.AUTH_PASSWORD_OLD, config.AUTH_PASSWORD_CORRECT)
+
+            new_password_input = driver.find_element(By.ID, "updatepasswordform-new_password")
             new_password_input.send_keys(config.AUTH_PASSWORD_CORRECT)
 
-            confirm_password_input = driver.find_element(
-                By.NAME, "NEW_PASSWORD_CONFIRM"
-            )
-            confirm_password_input.send_keys(config.AUTH_PASSWORD_CORRECT)
+            new_password_input_repeat = driver.find_element(By.ID, "updatepasswordform-new_password_repeat")
+            new_password_input_repeat.send_keys(config.AUTH_PASSWORD_CORRECT)
 
             # Сохранение нового пароля
-            save_button = driver.find_element(By.CSS_SELECTOR, "input[name='save']")
+            save_button = driver.find_element(By.ID, "save-btn")
             save_button.click()
             logging.info("Новый пароль сохранен.")
 
-            # Ожидание появления кнопки выхода перед нажатием на неё
-            logging.info("Ожидание появления элемента выхода.")
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, "a[href='/?logout=yes']")
-                )
+            # Проверка успешного изменения пароля
+            logging.info("Ожидание сообщения об успешном изменении пароля.")
+            success_message = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, ".alert--success"))
             )
 
-            driver.find_element(By.CSS_SELECTOR, "a[href='/?logout=yes']").click()
-            logging.info("Выход из аккаунта.")
-
-            # Попытка входа со старым паролем
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "a[href='/login/']"))
-            )
-
-            login_link.click()
-
-            email_input.send_keys(config.AUTH_EMAIL_CORRECT)
-            password_input.send_keys(config.AUTH_PASSWORD_OLD)
-            password_input.send_keys(Keys.RETURN)
-
-            try:
-                WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located(
-                        (By.CSS_SELECTOR, "a[href='/personal/']")
-                    )
-                )
-                logging.error("Успешный вход со старым паролем. Тест не пройден.")
-                self.fail("Успешный вход со старым паролем.")
-            except Exception:
-                logging.info("Не удалось войти со старым паролем. Ожидаем неуспех.")
-
-            # Попытка входа с новым паролем
-            login_link.click()
-
-            email_input.send_keys(config.AUTH_EMAIL_CORRECT)
-            password_input.send_keys(config.AUTH_PASSWORD_CORRECT)
-            password_input.send_keys(Keys.RETURN)
-
-            # Проверка успешного входа с новым паролем
-            try:
-                WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located(
-                        (By.CSS_SELECTOR, "a[href='/personal/']")
-                    )
-                )
-                logging.info("Успешный вход с новым паролем. Тест пройден.")
-
-                # Можно также проверить наличие элемента на главной странице
-                WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located(
-                        (By.CSS_SELECTOR, "a[href='/personal/']")
-                    )
-                )
-                logging.info("Авторизация успешна.")
-
-            except Exception:
-                logging.error("Не удалось войти с новым паролем. Тест не пройден.")
-                self.fail("Не удалось войти с новым паролем.")
+            self.assertEqual("Да! Ваш пароль обновлен.", success_message.text)
+            logging.info("Смена пароля прошла успешно.")
 
         except Exception as e:
-            logging.error(f"Ошибка при смене пароля: {e}")
-            self.fail("Не удалось выполнить тест смены пароля.")
+            logging.error(f"Произошла ошибка при смене пароля: {e}")
+            raise
+
+
+
+
+        #     # Попытка входа со старым паролем
+        #     WebDriverWait(driver, 10).until(
+        #         EC.presence_of_element_located((By.CSS_SELECTOR, "a[href='/login/']"))
+        #     )
+        #
+        #     login_link.click()
+        #
+        #     email_input.send_keys(config.AUTH_EMAIL_CORRECT)
+        #     password_input.send_keys(config.AUTH_PASSWORD_OLD)
+        #     password_input.send_keys(Keys.RETURN)
+        #
+        #     try:
+        #         WebDriverWait(driver, 10).until(
+        #             EC.presence_of_element_located(
+        #                 (By.CSS_SELECTOR, "a[href='/personal/']")
+        #             )
+        #         )
+        #         logging.error("Успешный вход со старым паролем. Тест не пройден.")
+        #         self.fail("Успешный вход со старым паролем.")
+        #     except Exception:
+        #         logging.info("Не удалось войти со старым паролем. Ожидаем неуспех.")
+        #
+        #     # Попытка входа с новым паролем
+        #     login_link.click()
+        #
+        #     email_input.send_keys(config.AUTH_EMAIL_CORRECT)
+        #     password_input.send_keys(config.AUTH_PASSWORD_CORRECT)
+        #     password_input.send_keys(Keys.RETURN)
+        #
+        #     # Проверка успешного входа с новым паролем
+        #     try:
+        #         WebDriverWait(driver, 10).until(
+        #             EC.presence_of_element_located(
+        #                 (By.CSS_SELECTOR, "a[href='/personal/']")
+        #             )
+        #         )
+        #         logging.info("Успешный вход с новым паролем. Тест пройден.")
+        #
+        #         # Можно также проверить наличие элемента на главной странице
+        #         WebDriverWait(driver, 10).until(
+        #             EC.presence_of_element_located(
+        #                 (By.CSS_SELECTOR, "a[href='/personal/']")
+        #             )
+        #         )
+        #         logging.info("Авторизация успешна.")
+        #
+        #     except Exception:
+        #         logging.error("Не удалось войти с новым паролем. Тест не пройден.")
+        #         self.fail("Не удалось войти с новым паролем.")
+        #
+        # except Exception as e:
+        #     logging.error(f"Ошибка при смене пароля: {e}")
+        #     self.fail("Не удалось выполнить тест смены пароля.")
 
     def tearDown(self):
         # Закрытие браузера

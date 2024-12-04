@@ -1,15 +1,17 @@
-MAIN_URL = "https://аквасуши.рф/"
+MAIN_URL = "https://www.ilovepdf.com/ru"
+MERGE_URL = "https://www.ilovepdf.com/ru/merge_pdf"
+
+
 TIMEOUT = 10
 MAX_RETRIES = 5
 
 # AUTH
-LOGIN_URL = "https://аквасуши.рф/login"
-AUTH_EMAIL_CORRECT = "synksta@ya.ru"
-AUTH_PASSWORD_OLD = "1V16NJkWGz5M"
-AUTH_PASSWORD_CORRECT = "Ghse4zhH9CYX"
+LOGIN_URL = "https://www.ilovepdf.com/ru"
+AUTH_EMAIL_CORRECT = "sizovivan.05@gmail.com"
+AUTH_PASSWORD_OLD = "3&OF;%^G}X{o"
+AUTH_PASSWORD_CORRECT = "'~7G.mqWoH*&"
+AUTH_PASSWORD_INVALID = "123123"
 
-AUTH_EMAIL_INVALID = "invalid@example.com"
-AUTH_PASSWORD_INVALID = "wrongpassword"
 
 
 def update_config(old_password, new_password):

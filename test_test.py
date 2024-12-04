@@ -1,7 +1,9 @@
 from selenium import webdriver
 import time
 
-url = "https://аквасуши.рф/"
+import config
+
+url = config.MAIN_URL
 driver = webdriver.Firefox()
 
 try:
