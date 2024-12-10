@@ -10,7 +10,7 @@ class TestMergePDF(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Инициализация веб-драйвера (используем ChromeDriver)
-        cls.driver = webdriver.Firefox()
+        cls.driver = webdriver.Edge()
         cls.driver.maximize_window()
 
     def test_merge_pdf_files(self):

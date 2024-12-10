@@ -11,10 +11,10 @@ class TestLoadPage(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # Настройка драйвера браузера Firefox с установкой стратегии загрузки страницы
-        options = webdriver.FirefoxOptions()
+        # Настройка драйвера браузера с установкой стратегии загрузки страницы
+        options = webdriver.Chrome()
         options.page_load_strategy = "eager"  # Установка стратегии загрузки на 'eager'
-        cls.driver = webdriver.Firefox(options=options)
+        cls.driver = webdriver.Chrome()
         cls.driver.set_page_load_timeout(config.TIMEOUT)
         cls.driver.maximize_window()
 

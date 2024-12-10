@@ -18,7 +18,7 @@ logging.basicConfig(
 class TestLogin(unittest.TestCase):
     def setUp(self):
         # Инициализация веб-драйвера (например, Firefox)
-        self.driver = webdriver.Firefox()
+        self.driver = webdriver.Chrome()
         self.driver.get(config.MAIN_URL)
         logging.info(f"Открыт сайт: {config.MAIN_URL}")
 
